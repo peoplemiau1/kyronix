@@ -2,11 +2,11 @@ ROOTFS := ../rootfs
 
 ifeq ($(USE_COREUTILS),1)
 COREUTILS_TARGET := coreutils
-KYROBOX_UTILS := awk clear cmp find grep killall less nc nslookup ping ps reboot sed which wget
+KYROBOX_UTILS := awk clear cmp diff find grep killall less nc nslookup patch ping ps reboot sed which wget
 else
 COREUTILS_TARGET :=
-KYROBOX_UTILS := awk basename cat chgrp chmod chown cksum clear cmp cp cut date dd dirname du echo env false \
-	find grep head hostname kill killall less link ln ls mkdir mktemp mv nc nslookup ping printenv printf ps pwd readlink reboot rm rmdir \
+KYROBOX_UTILS := awk basename cat chgrp chmod chown cksum clear cmp cp cut date dd diff dirname du echo env false \
+	find grep head hostname kill killall less link ln ls mkdir mktemp mv nc nslookup patch ping printenv printf ps pwd readlink reboot rm rmdir \
 	sed seq sleep sort sync tail tee test touch tr true tty uname uniq unlink wc wget which whoami yes
 endif
 
