@@ -146,6 +146,11 @@ static int64_t sys_brk(uint64_t addr) {
 #define MAP_FIXED 0x10
 #define MAP_PRIVATE 0x02
 #define MAP_SHARED 0x01
+#define MAP_GROWSDOWN 0x0100
+#define MAP_NORESERVE 0x4000
+#define MAP_POPULATE 0x8000
+#define MAP_NONBLOCK 0x10000
+#define MAP_STACK 0x20000
 
 static bool user_map_range_ok(uint64_t addr, uint64_t len) {
     if (!len || (addr & (PAGE_SIZE - 1))) return false;
@@ -158,7 +163,9 @@ static bool prot_valid(uint64_t prot) {
 }
 
 static bool mmap_flags_valid(uint64_t flags) {
-    if (flags & ~(uint64_t) (MAP_ANON | MAP_FIXED | MAP_PRIVATE | MAP_SHARED)) return false;
+    uint64_t allowed = MAP_ANON | MAP_FIXED | MAP_PRIVATE | MAP_SHARED |
+                       MAP_GROWSDOWN | MAP_NORESERVE | MAP_POPULATE | MAP_NONBLOCK | MAP_STACK;
+    if (flags & ~allowed) return false;
     if (!(flags & MAP_ANON) && !(flags & (MAP_PRIVATE | MAP_SHARED))) return false;
     return true;
 }

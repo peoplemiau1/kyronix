@@ -1,3 +1,26 @@
+ifeq ($(filter --coreutils,$(MAKECMDGOALS)),--coreutils)
+    USE_COREUTILS := 1
+    --coreutils:
+	@:
+endif
+
+ifeq ($(USE_COREUTILS),1)
+TEST_COREUTILS_BUILD := $(MAKE) -C user coreutils USE_COREUTILS=1
+TEST_KYROBOX_BUILD := $(MAKE) -C user/kyrobox USE_COREUTILS=1
+TEST_KYROBOX_UTILS := awk clear cmp find grep killall less nc nslookup ping ps reboot sed which wget
+TEST_COREUTILS_INSTALL := cp build/bin/coreutils $(TEST_ROOTFS)/bin/ && \
+	for app in $$(build/bin/coreutils --list); do \
+	    ln -sf coreutils $(TEST_ROOTFS)/bin/$$app; \
+	done
+else
+TEST_COREUTILS_BUILD :=
+TEST_KYROBOX_BUILD := $(MAKE) -C user/kyrobox
+TEST_KYROBOX_UTILS := awk basename cat chgrp chmod chown cksum clear cmp cp cut date dd dirname du echo env false \
+	find grep head hostname kill killall less link ln ls mkdir mktemp mv nc nslookup ping printenv printf ps pwd readlink reboot rm rmdir \
+	sed seq sleep sort sync tail tee test touch tr true tty uname uniq unlink wc wget which whoami yes
+TEST_COREUTILS_INSTALL :=
+endif
+
 VERSION    := $(shell sed -n 's/ *#define *KERNEL_VERSION *"\(.*\)"/\1/p' kernel/version.h)
 BUILD_TYPE := INDEV
 ARCH       := amd64
@@ -246,7 +269,7 @@ build/libatomic_asneeded.a:
 	ar rcs $@
 
 user-build: build/libatomic_asneeded.a
-	$(MAKE) -C user
+	$(MAKE) -C user USE_COREUTILS=$(USE_COREUTILS)
 
 xorg:
 	@bash scripts/get-xorg.sh
@@ -429,7 +452,8 @@ testrunner: build/libatomic_asneeded.a
 	$(MAKE) -C user/testrunner
 
 test-initrd: $(TARGET) testrunner build/libatomic_asneeded.a
-	$(MAKE) -C user/kyrobox
+	$(TEST_COREUTILS_BUILD)
+	$(TEST_KYROBOX_BUILD)
 	$(MAKE) -C user/fetch
 	$(MAKE) -C user/shell
 	@mkdir -p $(@D)
@@ -438,11 +462,10 @@ test-initrd: $(TARGET) testrunner build/libatomic_asneeded.a
 	cp build/bin/testrunner $(TEST_ROOTFS)/init
 	cp build/bin/ksh        $(TEST_ROOTFS)/bin/
 	ln -sf ksh $(TEST_ROOTFS)/bin/sh
-	for app in basename cat chgrp chmod chown cksum clear cmp cp cut date dd dirname du echo env false \
-	    find grep head hostname kill killall less link ln ls mkdir mktemp mv nc nslookup ping printenv printf ps pwd readlink reboot rm rmdir \
-	    sed seq sleep sort sync tail tee test touch tr true tty uname uniq unlink wc wget which whoami yes; do \
+	for app in $(TEST_KYROBOX_UTILS); do \
 	    cp build/bin/$$app $(TEST_ROOTFS)/bin/; \
 	done
+	$(TEST_COREUTILS_INSTALL)
 	cp build/bin/fetch     $(TEST_ROOTFS)/bin/
 	cp build/bin/make      $(TEST_ROOTFS)/bin/
 	cd $(TEST_ROOTFS) && find . | sort | cpio -o --format=newc --owner=0:0 --reproducible > ../$(TEST_INITRD) 2>/dev/null
