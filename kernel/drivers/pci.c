@@ -40,6 +40,8 @@ static uint32_t bar_size(uint8_t bus, uint8_t dev, uint8_t fn, uint8_t bar_idx) 
     return ~(sz & ~0xFU) + 1;
 }
 
+static void scan_bus(uint8_t bus);
+
 static void probe(uint8_t bus, uint8_t dev, uint8_t fn) {
     uint32_t id = pci_read32(bus, dev, fn, 0x00);
     if ((id & 0xFFFF) == 0xFFFF) return; /* no device */
@@ -81,21 +83,37 @@ static void probe(uint8_t bus, uint8_t dev, uint8_t fn) {
                 d->bar_sizes[i] = bar_size(bus, dev, fn, (uint8_t) (i));
             }
         }
+    } else if (d->header_type == 1) {
+        uint8_t secondary_bus = pci_read8(bus, dev, fn, 0x19);
+        if (secondary_bus != 0) {
+            scan_bus(secondary_bus);
+        }
     }
 
     log_info("PCI %02x:%02x.%x  %04x:%04x  class %02x:%02x  irq %u", bus, dev, fn, d->vendor,
              d->device, d->class, d->subclass, d->irq_line);
 }
 
-void pci_enumerate(void) {
-    for (uint16_t bus = 0; bus < 256; bus++) {
-        for (uint8_t dev = 0; dev < 32; dev++) {
-            uint32_t id = pci_read32((uint8_t) bus, dev, 0, 0);
-            if ((id & 0xFFFF) == 0xFFFF) continue;
-            uint8_t hdr = pci_read8((uint8_t) bus, dev, 0, 0x0E);
-            int nfn = (hdr & 0x80) ? 8 : 1; /* multi-function check */
-            for (int fn = 0; fn < nfn; fn++) probe((uint8_t) bus, dev, (uint8_t) fn);
+static uint8_t g_pci_scanned_buses[256];
+
+static void scan_bus(uint8_t bus) {
+    if (g_pci_scanned_buses[bus]) return;
+    g_pci_scanned_buses[bus] = 1;
+
+    uint8_t max_dev = (bus == 0) ? 32 : 1;
+    for (uint8_t dev = 0; dev < max_dev; dev++) {
+        uint32_t id = pci_read32(bus, dev, 0, 0);
+        if ((id & 0xFFFF) == 0xFFFF) continue;
+        uint8_t hdr = pci_read8(bus, dev, 0, 0x0E);
+        int nfn = (hdr & 0x80) ? 8 : 1; /* multi-function check */
+        for (int fn = 0; fn < nfn; fn++) {
+            probe(bus, dev, fn);
         }
     }
+}
+
+void pci_enumerate(void) {
+    for (int i = 0; i < 256; i++) g_pci_scanned_buses[i] = 0;
+    scan_bus(0);
     log_info("PCI: found %d devices", g_pci_ndevs);
 }
