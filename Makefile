@@ -1,3 +1,9 @@
+USE_COREUTILS ?= 1
+
+ifeq ($(COREUTILS),0)
+    USE_COREUTILS := 0
+endif
+
 ifeq ($(filter --coreutils,$(MAKECMDGOALS)),--coreutils)
     USE_COREUTILS := 1
     --coreutils:
@@ -7,7 +13,7 @@ endif
 ifeq ($(USE_COREUTILS),1)
 TEST_COREUTILS_BUILD := $(MAKE) -C user coreutils USE_COREUTILS=1
 TEST_KYROBOX_BUILD := $(MAKE) -C user/kyrobox USE_COREUTILS=1
-TEST_KYROBOX_UTILS := awk clear cmp find grep killall less nc nslookup ping ps reboot sed which wget
+TEST_KYROBOX_UTILS := awk clear cmp diff find grep killall less nc nslookup patch ping ps reboot sed which wget
 TEST_COREUTILS_INSTALL := cp build/bin/coreutils $(TEST_ROOTFS)/bin/ && \
 	for app in $$(build/bin/coreutils --list); do \
 	    ln -sf coreutils $(TEST_ROOTFS)/bin/$$app; \
@@ -15,8 +21,8 @@ TEST_COREUTILS_INSTALL := cp build/bin/coreutils $(TEST_ROOTFS)/bin/ && \
 else
 TEST_COREUTILS_BUILD :=
 TEST_KYROBOX_BUILD := $(MAKE) -C user/kyrobox
-TEST_KYROBOX_UTILS := awk basename cat chgrp chmod chown cksum clear cmp cp cut date dd dirname du echo env false \
-	find grep head hostname kill killall less link ln ls mkdir mktemp mv nc nslookup ping printenv printf ps pwd readlink reboot rm rmdir \
+TEST_KYROBOX_UTILS := awk basename cat chgrp chmod chown cksum clear cmp cp cut date dd diff dirname du echo env false \
+	find grep head hostname kill killall less link ln ls mkdir mktemp mv nc nslookup patch ping printenv printf ps pwd readlink reboot rm rmdir \
 	sed seq sleep sort sync tail tee test touch tr true tty uname uniq unlink wc wget which whoami yes
 TEST_COREUTILS_INSTALL :=
 endif
@@ -256,7 +262,7 @@ $(DISK_IMG): $(TARGET) $(INITRD) user-build
 	# Regenerate fontconfig cache so it matches ext2 mtimes
 	rm -rf $(DISK_ROOT)/var/cache/fontconfig
 	fc-cache --sysroot $(DISK_ROOT) -f 2>/dev/null || true
-	dd if=/dev/zero of=$@ bs=1M count=256 status=none
+	dd if=/dev/zero of=$@ bs=1M count=512 status=none
 	mkfs.ext2 -b 4096 -L kyronix -d $(DISK_ROOT) $@ 2>/dev/null
 	rm -rf $(DISK_ROOT)
 	@echo "  Warning: disk.img has no bootloader; boot via ISO"
