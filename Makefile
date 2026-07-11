@@ -573,9 +573,9 @@ clean:
 	rm -rf $(DIST_DIR)
 	rm -f $(CONFIG_H) .config
 	rm -rf $(BUILD_DIR) iso_root $(TEST_ROOTFS)
-	# keep st and cwm as blobs in rootfs/bin
+	# keep st, cwm and bash as blobs in rootfs/bin
 	for f in rootfs/bin/*; do \
-	    case "$$(basename $$f)" in st|cwm) ;; *) rm -f "$$f";; esac; \
+	    case "$$(basename $$f)" in st|cwm|bash) ;; *) rm -f "$$f";; esac; \
 	done
 	$(MAKE) -C user clean
 	$(MAKE) -C scripts/kconfig clean 2>/dev/null; true
