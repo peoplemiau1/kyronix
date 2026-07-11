@@ -358,7 +358,7 @@ run:
 	    -m 2G                       \
 	    -cdrom $(ISO)               \
 	    -boot d                     \
-	    -serial stdio               \
+	    -serial mon:stdio           \
 	    -vga qxl                    \
 	    -global qxl-vga.vgamem_mb=1024 \
 	    -netdev user,id=n0          \
@@ -374,7 +374,7 @@ run-serial:
 	    -cdrom $(ISO)               \
 	    -boot d                     \
 	    -display none               \
-	    -serial stdio               \
+	    -serial mon:stdio           \
 	    -drive file=$(DISK_IMG),format=raw,if=none,id=hd0,cache=writethrough \
 	    -device ahci,id=ahci \
 	    -device ide-hd,drive=hd0,bus=ahci.0
@@ -388,7 +388,7 @@ run-disk:
 	    -drive file=$(DISK_IMG),format=raw,if=none,id=hd0,cache=writethrough \
 	    -device ahci,id=ahci \
 	    -device ide-hd,drive=hd0,bus=ahci.0 \
-	    -serial stdio               \
+	    -serial mon:stdio           \
 	    -vga qxl                    \
 	    -global qxl-vga.vgamem_mb=1024
 
@@ -432,7 +432,7 @@ live-run:
 	    -m 2G                       \
 	    -cdrom $(LIVE_ISO)          \
 	    -boot d                     \
-	    -serial stdio               \
+	    -serial mon:stdio           \
 	    -vga qxl                    \
 	    -global qxl-vga.vgamem_mb=1024
 
@@ -445,7 +445,7 @@ run-uefi:
 	    -cdrom $(ISO)               \
 	    -bios $(OVMF)               \
 	    -boot d                     \
-	    -serial stdio               \
+	    -serial mon:stdio           \
 	    -vga qxl                    \
 	    -global qxl-vga.vgamem_mb=1024 \
 	    -drive file=$(DISK_IMG),format=raw,if=none,id=hd0,cache=writethrough \
@@ -518,7 +518,7 @@ test-run: $(TEST_DISK_IMG)
 	    -m 512M                     \
 	    -cdrom $(TEST_ISO)          \
 	    -display none               \
-	    -serial stdio               \
+	    -serial mon:stdio           \
 	    -netdev user,id=n0          \
 	    -device virtio-net-pci,netdev=n0 \
 	    -drive file=$(TEST_DISK_IMG),format=raw,if=none,id=hd0,cache=writethrough \
