@@ -53,11 +53,13 @@ int fd_ioctl(int fd, uint64_t req, uint64_t arg) {
         struct termios *t = (struct termios *) (uintptr_t) arg;
         if (!t) return -(int) EINVAL;
         if (!uptr_ok_w(t, sizeof(*t))) return -(int) EFAULT;
-        memset(t, 0, sizeof(*t));
-        t->c_iflag = 0x500;
-        t->c_oflag = 0x5;
-        t->c_cflag = 0xBF;
-        t->c_lflag = tty_get_lflag();
+        struct termios_s ts;
+        tty_get_termios(&ts);
+        t->c_iflag = ts.c_iflag;
+        t->c_oflag = ts.c_oflag;
+        t->c_cflag = ts.c_cflag;
+        t->c_lflag = ts.c_lflag;
+        memcpy(t->c_cc, ts.c_cc, 19);
         return 0;
     }
     case TCSETS:
@@ -66,7 +68,13 @@ int fd_ioctl(int fd, uint64_t req, uint64_t arg) {
         struct termios *t = (struct termios *) (uintptr_t) arg;
         if (t) {
             if (!uptr_ok(t, sizeof(*t))) return -(int) EFAULT;
-            tty_set_lflag(t->c_lflag);
+            struct termios_s ts;
+            ts.c_iflag = t->c_iflag;
+            ts.c_oflag = t->c_oflag;
+            ts.c_cflag = t->c_cflag;
+            ts.c_lflag = t->c_lflag;
+            memcpy(ts.c_cc, t->c_cc, 19);
+            tty_set_termios(&ts);
         }
         return 0;
     }
