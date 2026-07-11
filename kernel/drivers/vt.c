@@ -71,6 +71,7 @@ typedef struct {
 #define NCCS_VT 19
 typedef struct {
     uint32_t c_iflag, c_oflag, c_cflag, c_lflag;
+    uint8_t c_line;
     uint8_t c_cc[NCCS_VT];
 } vt_termios_t;
 
@@ -159,6 +160,7 @@ static int64_t vt_ioctl(vfs_node_t *n, uint64_t req, uint64_t arg) {
         t->c_oflag = ts.c_oflag;
         t->c_cflag = ts.c_cflag;
         t->c_lflag = ts.c_lflag;
+        t->c_line = 0;
         __builtin_memcpy(t->c_cc, ts.c_cc, NCCS_VT < NCCS ? NCCS_VT : NCCS);
         return 0;
     }
