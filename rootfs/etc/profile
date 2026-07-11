@@ -1,3 +1,4 @@
 export DISPLAY=:0
 export PATH=/usr/bin:/bin:/sbin
 export LIBGL_ALWAYS_SOFTWARE=1
+export TERMINFO=/usr/share/terminfo
